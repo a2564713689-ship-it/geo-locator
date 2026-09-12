@@ -3,224 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b0e13">
+<meta name="theme-color" content="#06090f">
 <title>坐标定位仪 · 高德 GPS 经纬度</title>
 <style>
   :root{
-    --bg:#0b0e13;
-    --panel:#11161d;
-    --panel-2:#0f141a;
+    --bg-0:#04060b;
+    --bg-1:#0a1220;
+    --panel:#0d1622;
+    --panel-2:#0a111c;
     --line:rgba(255,255,255,.08);
-    --line-2:rgba(255,255,255,.14);
-    --txt:#e8edf2;
-    --txt-dim:#8b98a8;
-    --txt-faint:#5a6572;
-    --acc:#a3e635;
-    --acc-dim:rgba(163,230,53,.13);
-    --acc-glow:rgba(163,230,53,.45);
+    --line-2:rgba(255,255,255,.16);
+    --txt:#e9eff6;
+    --txt-dim:#8fa0b2;
+    --txt-faint:#56637a;
+    --acc:#34d399;
+    --acc-dim:rgba(52,211,153,.14);
+    --acc-glow:rgba(52,211,153,.5);
     --warn:#fbbf24;
-    --err:#f87171;
-    --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,"Roboto Mono",monospace;
+    --err:#fb7185;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
     --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei",sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
-    background:
-      linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/30px 30px,
-      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/30px 30px,
-      radial-gradient(120% 80% at 50% -10%,#16202b 0%,var(--bg) 55%);
+    background-color:var(--bg-0);
+    background-image:
+      radial-gradient(1.2px 1.2px at 18% 22%, rgba(255,255,255,.16), transparent 50%),
+      radial-gradient(1px 1px at 72% 10%, rgba(255,255,255,.12), transparent 50%),
+      radial-gradient(1.4px 1.4px at 88% 34%, rgba(255,255,255,.10), transparent 50%),
+      radial-gradient(1px 1px at 42% 58%, rgba(255,255,255,.08), transparent 50%),
+      radial-gradient(1.2px 1.2px at 8% 78%, rgba(255,255,255,.12), transparent 50%),
+      radial-gradient(1px 1px at 92% 82%, rgba(255,255,255,.14), transparent 50%),
+      radial-gradient(1px 1px at 28% 92%, rgba(255,255,255,.09), transparent 50%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 42%, #03050a 100%);
     color:var(--txt);
     font-family:var(--sans);
     min-height:100%;
-    padding:18px 16px calc(24px + env(safe-area-inset-bottom));
+    padding:20px 16px calc(26px + env(safe-area-inset-bottom));
     display:flex;flex-direction:column;align-items:center;
   }
   .wrap{width:100%;max-width:430px;display:flex;flex-direction:column;gap:14px}
 
-  /* ---------- header ---------- */
-  header{display:flex;align-items:center;gap:12px;animation:rise .5s ease both}
+  /* ============ header ============ */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    animation:rise .5s ease both;
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
   .logo{
-    width:38px;height:38px;border-radius:10px;flex:none;
-    background:linear-gradient(145deg,#1a242e,#10161d);
+    width:42px;height:42px;border-radius:13px;flex:none;
+    background:linear-gradient(150deg,#132231,#0a1420);
     border:1px solid var(--line-2);
     display:grid;place-items:center;
-    box-shadow:0 0 0 4px rgba(255,255,255,.02),inset 0 1px 0 rgba(255,255,255,.06);
+    box-shadow:0 6px 18px -6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
   }
-  .logo svg{width:22px;height:22px}
-  .title{flex:1;min-width:0}
-  .title h1{font-size:16px;font-weight:600;letter-spacing:.02em}
-  .title p{font-size:11px;color:var(--txt-faint);margin-top:2px;letter-spacing:.04em}
+  .logo svg{width:24px;height:24px}
+  .title{min-width:0}
+  .title h1{font-size:17px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+  .title p{font-size:11px;color:var(--txt-faint);margin-top:3px;letter-spacing:.08em}
   .status{
-    display:flex;align-items:center;gap:6px;
-    font-size:11px;color:var(--txt-dim);
+    display:flex;align-items:center;gap:7px;flex:none;
+    font-size:12px;color:var(--txt-dim);
     border:1px solid var(--line);border-radius:999px;
-    padding:5px 10px;background:var(--panel);white-space:nowrap;
+    padding:7px 12px;background:rgba(255,255,255,.03);
   }
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--txt-faint);flex:none}
-  .status.locating .dot{background:var(--warn);box-shadow:0 0 0 0 var(--warn);animation:pulse 1.1s ease-out infinite}
-  .status.ok .dot{background:var(--acc);box-shadow:0 0 8px var(--acc-glow)}
-  .status.err .dot{background:var(--err);box-shadow:0 0 8px rgba(248,113,113,.5)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--txt-faint);flex:none;transition:all .3s}
+  .status.locating .dot{background:var(--warn);box-shadow:0 0 0 0 rgba(251,191,36,.6);animation:pulse 1.2s ease-out infinite}
+  .status.ok .dot{background:var(--acc);box-shadow:0 0 10px var(--acc-glow)}
+  .status.err .dot{background:var(--err);box-shadow:0 0 10px rgba(251,113,133,.55)}
 
-  /* ---------- coordinate card ---------- */
+  /* ============ coordinate card ============ */
   .coord{
     position:relative;overflow:hidden;
-    background:linear-gradient(160deg,var(--panel),var(--panel-2));
-    border:1px solid var(--line);border-radius:16px;
-    padding:18px 18px 16px;
+    background:linear-gradient(155deg,#0e1826 0%,#0a111c 70%);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 24px 48px -24px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04);
     animation:rise .5s .06s ease both;
   }
   .coord::before{
-    content:"";position:absolute;inset:0;pointer-events:none;
-    background:
-      linear-gradient(90deg,var(--acc-dim),transparent 30%),
-      radial-gradient(90% 120% at 100% 0%,rgba(163,230,53,.05),transparent 50%);
+    content:"";position:absolute;top:0;left:10%;right:10%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(52,211,153,.55),transparent);
   }
-  .coord .grid-label{
-    position:absolute;top:0;right:0;width:64px;height:64px;
-    background-image:
-      linear-gradient(rgba(163,230,53,.28) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(163,230,53,.28) 1px,transparent 1px);
-    background-size:16px 16px;
-    -webkit-mask-image:radial-gradient(60% 60% at 100% 0%,#000 20%,transparent 75%);
-    mask-image:radial-gradient(60% 60% at 100% 0%,#000 20%,transparent 75%);
-    opacity:.5;
+  .coord-deco{
+    position:absolute;top:-38px;right:-38px;width:150px;height:150px;
+    border-radius:50%;
+    border:1px solid rgba(52,211,153,.16);
+    box-shadow:0 0 0 12px rgba(52,211,153,.04),0 0 0 30px rgba(52,211,153,.025),0 0 0 52px rgba(52,211,153,.015);
+    pointer-events:none;
   }
-  .coord .top{display:flex;align-items:baseline;justify-content:space-between;position:relative}
-  .coord .top .t{font-size:11px;letter-spacing:.18em;color:var(--txt-dim);text-transform:uppercase}
+  .coord-deco::after{
+    content:"";position:absolute;top:50%;left:50%;width:8px;height:8px;transform:translate(-50%,-50%);
+    background:var(--acc);border-radius:50%;box-shadow:0 0 14px var(--acc-glow);
+  }
+  .coord-head{
+    position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .coord-label{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:11px;letter-spacing:.16em;color:var(--txt-dim);
+  }
+  .coord-label .tick{
+    width:14px;height:1px;background:var(--acc);display:inline-block;
+    box-shadow:0 0 6px var(--acc-glow);
+  }
   .copy{
-    display:inline-flex;align-items:center;gap:5px;
-    font-size:11px;color:var(--acc);
-    background:transparent;border:1px solid var(--line-2);border-radius:8px;
-    padding:5px 10px;cursor:pointer;font-family:var(--sans);
-    transition:background .15s,transform .1s;
+    display:inline-flex;align-items:center;gap:6px;flex:none;
+    font-size:12px;color:var(--acc);font-family:var(--sans);
+    background:transparent;border:1px solid rgba(52,211,153,.35);border-radius:9px;
+    padding:6px 12px;cursor:pointer;
+    transition:background .18s,transform .1s,box-shadow .18s;
   }
+  .copy svg{width:13px;height:13px}
   .copy:active{transform:scale(.94)}
-  .copy.done{background:var(--acc-dim);border-color:rgba(163,230,53,.4)}
-  .lnglat{display:flex;flex-direction:column;gap:8px;margin-top:16px;position:relative}
-  .row{display:flex;align-items:baseline;gap:10px}
+  .copy.done{background:var(--acc-dim);border-color:rgba(52,211,153,.55);box-shadow:0 0 14px rgba(52,211,153,.18)}
+
+  .lnglat{display:flex;flex-direction:column;gap:6px;margin-top:16px;position:relative}
+  .row{display:flex;align-items:baseline;gap:14px}
   .row .k{
-    font-size:11px;color:var(--txt-faint);width:34px;flex:none;
-    font-family:var(--mono);letter-spacing:.05em;
+    font-size:11px;color:var(--txt-faint);width:30px;flex:none;
+    font-family:var(--mono);letter-spacing:.12em;font-weight:600;
   }
   .row .v{
-    font-family:var(--mono);font-size:26px;font-weight:600;
-    letter-spacing:.03em;font-variant-numeric:tabular-nums;
-    text-shadow:0 0 22px rgba(232,237,242,.12);
-    transition:color .25s;
+    font-family:var(--mono);font-size:30px;font-weight:600;line-height:1.15;
+    letter-spacing:.015em;font-variant-numeric:tabular-nums;
+    color:#ecfdf5;text-shadow:0 0 22px rgba(52,211,153,.22);
+    transition:color .3s;
   }
-  .row .v.updated{color:var(--acc)}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative}
+  .row .v.updated{color:var(--acc);text-shadow:0 0 26px var(--acc-glow)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;position:relative}
   .chip{
+    display:inline-flex;align-items:center;gap:5px;
     font-size:11px;color:var(--txt-dim);
-    border:1px solid var(--line);border-radius:7px;
-    padding:4px 9px;background:rgba(255,255,255,.025);
+    border:1px solid var(--line);border-radius:8px;
+    padding:5px 10px;background:rgba(255,255,255,.025);
     font-variant-numeric:tabular-nums;
   }
   .chip b{color:var(--txt);font-weight:600;font-family:var(--mono)}
+  .chip.acc{border-color:rgba(52,211,153,.28);background:var(--acc-dim)}
   .chip.acc b{color:var(--acc)}
 
-  /* ---------- map ---------- */
+  /* ============ map ============ */
   .mapbox{
-    position:relative;height:42vh;min-height:260px;
-    border-radius:16px;overflow:hidden;border:1px solid var(--line);
-    background:#0d1117;
+    position:relative;height:42vh;min-height:270px;
+    border-radius:20px;overflow:hidden;
+    border:1px solid var(--line);
+    background:#0a0f16;
+    box-shadow:0 24px 48px -24px rgba(0,0,0,.8);
     animation:rise .5s .12s ease both;
   }
   #map{width:100%;height:100%}
   .mapbox.loading::after{
     content:"";position:absolute;inset:0;z-index:2;
-    background:rgba(10,13,18,.55);backdrop-filter:blur(2px);
-    display:grid;place-items:center;
-    background-image:radial-gradient(circle at center,transparent 8%,rgba(10,13,18,.75) 70%);
+    background:radial-gradient(circle at center, transparent 6%, rgba(4,6,11,.82) 72%);
+    backdrop-filter:blur(1.5px);
   }
   .radar{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none}
-  .radar .ring{position:absolute;width:120px;height:120px;border-radius:50%;border:1px solid rgba(163,230,53,.55)}
-  .radar .ring.r2{width:210px;height:210px;border-color:rgba(163,230,53,.28)}
-  .radar .ring.r3{width:300px;height:300px;border-color:rgba(163,230,53,.13)}
-  .radar .core{width:12px;height:12px;border-radius:50%;background:var(--acc);box-shadow:0 0 18px var(--acc-glow)}
+  .radar .ring{position:absolute;border-radius:50%;border:1px solid rgba(52,211,153,.5)}
+  .radar .ring{width:130px;height:130px}
+  .radar .ring.r2{width:220px;height:220px;border-color:rgba(52,211,153,.28)}
+  .radar .ring.r3{width:312px;height:312px;border-color:rgba(52,211,153,.13)}
+  .radar .sweep{
+    position:absolute;width:130px;height:130px;border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(52,211,153,.35), transparent 22%);
+    -webkit-mask-image:radial-gradient(circle, transparent 0 16px, #000 17px);
+    mask-image:radial-gradient(circle, transparent 0 16px, #000 17px);
+    opacity:.8;
+  }
+  .radar .core{width:14px;height:14px;border-radius:50%;background:var(--acc);box-shadow:0 0 20px var(--acc-glow),0 0 4px rgba(52,211,153,.8)}
+  .radar .cross{position:absolute;background:rgba(52,211,153,.18)}
+  .radar .cross.x{width:312px;height:1px}
+  .radar .cross.y{width:1px;height:312px}
   .radar .txt{
     position:absolute;bottom:26px;width:100%;text-align:center;
-    font-size:12px;color:var(--txt-dim);letter-spacing:.08em;
+    font-size:12px;color:var(--txt-dim);letter-spacing:.12em;
   }
-  .mapbox.loading .ring{animation:rings 1.6s ease-out infinite}
-  .mapbox.loading .ring.r2{animation-delay:.3s}
-  .mapbox.loading .ring.r3{animation-delay:.6s}
-  .mapbox.error::before{
-    content:"";position:absolute;inset:0;z-index:2;background:rgba(10,13,18,.72);
-    display:grid;place-items:center;
-  }
+  .mapbox.loading .ring{animation:rings 1.7s ease-out infinite}
+  .mapbox.loading .ring.r2{animation-delay:.32s}
+  .mapbox.loading .ring.r3{animation-delay:.64s}
+  .mapbox.loading .sweep{animation:spin 1.7s linear infinite}
+
   .maperr{
     position:absolute;inset:0;z-index:4;display:none;
     place-items:center;text-align:center;padding:24px;
   }
   .maperr.show{display:grid}
-  .maperr .icon{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;margin:0 auto 10px;color:var(--warn)}
-  .maperr h3{font-size:14px;font-weight:600;margin-bottom:6px}
-  .maperr p{font-size:12px;color:var(--txt-dim);line-height:1.7}
+  .maperr-inner{animation:rise .4s ease both}
+  .maperr .icon{
+    width:46px;height:46px;border-radius:50%;border:1px solid rgba(251,191,36,.4);
+    display:grid;place-items:center;margin:0 auto 12px;color:var(--warn);
+    background:rgba(251,191,36,.06);
+  }
+  .maperr .icon svg{width:20px;height:20px}
+  .maperr h3{font-size:15px;font-weight:600;margin-bottom:7px}
+  .maperr p{font-size:12px;color:var(--txt-dim);line-height:1.75}
 
-  /* ---------- actions ---------- */
+  /* ============ actions ============ */
   .actions{display:flex;gap:10px;animation:rise .5s .18s ease both}
   .btn{
-    flex:1;border:none;border-radius:12px;cursor:pointer;
+    flex:1;border:none;border-radius:14px;cursor:pointer;
     font-size:15px;font-weight:600;font-family:var(--sans);
-    padding:14px 0;letter-spacing:.06em;
+    padding:15px 0;letter-spacing:.08em;
     transition:transform .1s,box-shadow .2s,opacity .2s;
   }
   .btn:active{transform:scale(.97)}
   .btn.primary{
-    background:linear-gradient(180deg,#b4f04d,#93d92b);
-    color:#10150a;
-    box-shadow:0 6px 22px rgba(163,230,53,.25),inset 0 1px 0 rgba(255,255,255,.5);
+    background:linear-gradient(180deg,#4ee6a6,#23c285);
+    color:#04150d;
+    box-shadow:0 8px 26px rgba(52,211,153,.28), inset 0 1px 0 rgba(255,255,255,.45);
   }
-  .btn.primary:disabled{opacity:.45;cursor:not-allowed}
+  .btn.primary:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   .btn.ghost{
-    flex:none;width:52px;
+    flex:none;width:56px;
     background:var(--panel);border:1px solid var(--line-2);color:var(--txt);
     display:grid;place-items:center;
   }
-  .btn.ghost svg{width:19px;height:19px}
+  .btn.ghost svg{width:20px;height:20px}
 
-  /* ---------- footer ---------- */
+  /* ============ footer ============ */
   .note{
-    text-align:center;font-size:11px;color:var(--txt-faint);line-height:1.8;
+    text-align:center;font-size:11px;color:var(--txt-faint);line-height:1.9;
     animation:rise .5s .24s ease both;
-  }
-  .note code{
-    font-family:var(--mono);font-size:10px;color:var(--txt-dim);
-    background:rgba(255,255,255,.05);border:1px solid var(--line);
-    border-radius:5px;padding:1px 6px;
   }
 
   @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 var(--warn)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
-  @keyframes rings{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.15);opacity:0}}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(251,191,36,.6)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @keyframes rings{0%{transform:scale(.35);opacity:1}100%{transform:scale(1.12);opacity:0}}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s!important;animation-iteration-count:1!important}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="1.6">
-        <circle cx="12" cy="12" r="7.2"/>
-        <circle cx="12" cy="12" r="1.6" fill="#a3e635" stroke="none"/>
-        <path d="M12 2v3.2M12 18.8V22M2 12h3.2M18.8 12H22" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div class="title">
-      <h1>坐标定位仪</h1>
-      <p>AMap GPS · GCJ-02 · 手机定位</p>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5">
+          <circle cx="12" cy="12" r="8.2"/>
+          <path d="M12 3.8V2M12 22v-1.8M2 12h1.8M20.2 12H22" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2" fill="#34d399" stroke="none"/>
+        </svg>
+      </span>
+      <div class="title">
+        <h1>坐标定位仪</h1>
+        <p>AMAP · GCJ-02 · 实时定位</p>
+      </div>
     </div>
     <div class="status" id="status"><span class="dot"></span><span id="statusTxt">待定位</span></div>
   </header>
 
   <section class="coord">
-    <div class="grid-label"></div>
-    <div class="top">
-      <span class="t">当前位置坐标</span>
+    <div class="coord-deco"></div>
+    <div class="coord-head">
+      <span class="coord-label"><span class="tick"></span>当前位置 · CURRENT POSITION</span>
       <button class="copy" id="copyBtn">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
         </svg>
         <span id="copyTxt">复制</span>
@@ -242,13 +284,15 @@
     <div id="map"></div>
     <div class="radar" id="radar">
       <span class="ring"></span><span class="ring r2"></span><span class="ring r3"></span>
+      <span class="sweep"></span>
+      <span class="cross x"></span><span class="cross y"></span>
       <span class="core"></span>
       <span class="txt">正在获取卫星信号…</span>
     </div>
     <div class="maperr" id="maperr">
-      <div>
+      <div class="maperr-inner">
         <div class="icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/>
           </svg>
         </div>
@@ -342,8 +386,8 @@
     if(accuracy && accuracy > 0){
       accCircle = new AMap.Circle({
         center: [lng, lat], radius: accuracy,
-        strokeColor: "#a3e635", strokeWeight: 1, strokeOpacity: .6,
-        fillColor: "#a3e635", fillOpacity: .07
+        strokeColor: "#34d399", strokeWeight: 1, strokeOpacity: .6,
+        fillColor: "#34d399", fillOpacity: .07
       });
       map.add(accCircle);
       map.setFitView([marker, accCircle], false, [40,40,40,40]);
@@ -471,8 +515,8 @@
   function toggleTrack(){
     if(!geo) return;
     tracking = !tracking;
-    trackBtn.style.color = tracking ? "#a3e635" : "";
-    trackBtn.style.borderColor = tracking ? "rgba(163,230,53,.5)" : "";
+    trackBtn.style.color = tracking ? "#34d399" : "";
+    trackBtn.style.borderColor = tracking ? "rgba(52,211,153,.5)" : "";
     if(tracking) geo.watchPosition(onComplete, onError, { enableHighAccuracy: true });
     else geo.clearWatch && geo.clearWatch();
   }
